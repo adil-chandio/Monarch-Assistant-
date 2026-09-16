@@ -9,6 +9,7 @@
     "start": "node server.js",
     "test": "node --test bot.test.js worker.test.js",
     "check": "node scripts/check-connection.js",
+    "build": "wrangler deploy",
     "deploy:workers": "wrangler deploy"
   },
   "engines": {
