@@ -1,9 +1,9 @@
-'use strict';
-
 /**
- * Monarch Assistant — WhatsApp Cloud API webhook server.
+ * Monarch Assistant — WhatsApp Cloud API webhook server (Node.js).
  *
- * Zero dependencies (plain Node http).
+ * Zero dependencies (plain Node http). Is file se server chalta hai:
+ *   - Freebuff / Render / kisi bhi host par (Node 18+)
+ *   - VPS par Docker se (Dockerfile)
  *
  *  GET  /webhook  -> Meta webhook verification (hub.challenge) + health check
  *  POST /webhook  -> incoming message -> auto reply in the sender's language
@@ -17,16 +17,17 @@
  *   PORT                    (optional) default 3000
  */
 
-const http = require('http');
-const { detectLanguage } = require('./lib/detect');
-const { buildReply } = require('./lib/replies');
-const { sendText } = require('./lib/whatsapp');
+import http from 'node:http';
+import { detectLanguage } from './lib/detect.js';
+import { buildReply } from './lib/replies.js';
+import { sendText } from './lib/whatsapp.js';
 
 const PORT = Number(process.env.PORT || 3000);
 const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const OWN_PHONE = (process.env.WHATSAPP_PHONE || '').replace(/\D/g, '');
 const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN || 'monarch-assistant-verify';
+const API_VERSION = process.env.WHATSAPP_API_VERSION || 'v25.0';
 
 if (!TOKEN || !PHONE_NUMBER_ID) {
   console.error('ERROR: set WHATSAPP_TOKEN and PHONE_NUMBER_ID environment variables');
@@ -48,7 +49,6 @@ function alreadySeen(id) {
   return false;
 }
 
-/** Read and size-cap the request body. */
 function readBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -91,7 +91,6 @@ async function handleValue(value) {
       console.log(`skip: duplicate webhook delivery (${id})`);
       continue;
     }
-
     if (message.type !== 'text') {
       console.log(`note: non-text message type "${message.type}" from ${from} — no reply in v1`);
       continue;
@@ -107,13 +106,12 @@ async function handleValue(value) {
         phoneNumberId: phoneId,
         to: from,
         body: reply,
+        apiVersion: API_VERSION,
         contextMessageId: id,
       });
       console.log(`replied to ${from} in [${language}] (msg ${id})`);
     } catch (err) {
       console.error(`FAILED to reply to ${from}: ${err.message}`);
-      // Do not mark the failure as "seen" again — it already is. If Meta
-      // redelivers (it only does on non-200), we reply again next delivery.
     }
   }
 }

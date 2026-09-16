@@ -1,33 +1,31 @@
-'use strict';
-
-const test = require('node:test');
-const assert = require('node:assert');
-const { detectLanguage } = require('./lib/detect');
-const { buildReply, REPLIES } = require('./lib/replies');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { detectLanguage } from './lib/detect.js';
+import { buildReply, REPLIES } from './lib/replies.js';
 
 test('detect: Urdu script -> urdu', () => {
-  assert.strictEqual(detectLanguage('السلام علیکم، میرا نام علی ہے'), 'urdu');
-  assert.strictEqual(detectLanguage('کیا ہو رہا ہے؟'), 'urdu');
+  assert.equal(detectLanguage('السلام علیکم، میرا نام علی ہے'), 'urdu');
+  assert.equal(detectLanguage('کیا ہو رہا ہے؟'), 'urdu');
 });
 
 test('detect: Roman Urdu -> roman', () => {
-  assert.strictEqual(detectLanguage('kya hal hai bhai'), 'roman');
-  assert.strictEqual(detectLanguage('Assalam o Alaikum, mera naam Ali hai'), 'roman');
-  assert.strictEqual(detectLanguage('mera name Ali hai, kaam hai meeting book karni hai'), 'roman');
-  assert.strictEqual(detectLanguage('sir, call karna tha payment ke baare me'), 'roman');
-  assert.strictEqual(detectLanguage('hello bhai'), 'roman');
+  assert.equal(detectLanguage('kya hal hai bhai'), 'roman');
+  assert.equal(detectLanguage('Assalam o Alaikum, mera naam Ali hai'), 'roman');
+  assert.equal(detectLanguage('mera name Ali hai, kaam hai meeting book karni hai'), 'roman');
+  assert.equal(detectLanguage('sir, call karna tha payment ke baare me'), 'roman');
+  assert.equal(detectLanguage('hello bhai'), 'roman');
 });
 
 test('detect: English -> english', () => {
-  assert.strictEqual(detectLanguage('I need your help please'), 'english');
-  assert.strictEqual(detectLanguage('Hello, my name is John and I want to talk about the order'), 'english');
-  assert.strictEqual(detectLanguage('What is my work today?'), 'english');
+  assert.equal(detectLanguage('I need your help please'), 'english');
+  assert.equal(detectLanguage('Hello, my name is John and I want to talk about the order'), 'english');
+  assert.equal(detectLanguage('What is my work today?'), 'english');
 });
 
 test('detect: empty/short falls back to roman', () => {
-  assert.strictEqual(detectLanguage(''), 'roman');
-  assert.strictEqual(detectLanguage('ok'), 'roman');
-  assert.strictEqual(detectLanguage(undefined), 'roman');
+  assert.equal(detectLanguage(''), 'roman');
+  assert.equal(detectLanguage('ok'), 'roman');
+  assert.equal(detectLanguage(undefined), 'roman');
 });
 
 test('buildReply: roman uses sir ki exact lines', () => {
@@ -37,7 +35,7 @@ test('buildReply: roman uses sir ki exact lines', () => {
 });
 
 test('buildReply: unknown language falls back to roman', () => {
-  assert.strictEqual(buildReply('spanish'), buildReply('roman'));
+  assert.equal(buildReply('spanish'), buildReply('roman'));
 });
 
 test('buildReply: every language mentions Monarch and asks for name+work', () => {
