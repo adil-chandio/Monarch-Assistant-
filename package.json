@@ -1,0 +1,16 @@
+{
+  "name": "monarch-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monarch sir ka personal WhatsApp assistant — official WhatsApp Cloud API par (auto-reply, language detection: Urdu/English/Roman Urdu)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test bot.test.js",
+    "check": "node scripts/check-connection.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}
