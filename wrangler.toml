@@ -1,0 +1,5 @@
+# Cloudflare Workers config — deploy: npx wrangler deploy
+# Secrets mat yahan likhna; `wrangler secret put <NAME>` se set karo.
+name = "monarch-assistant"
+main = "worker.js"
+compatibility_date = "2026-09-01"

@@ -1,0 +1,20 @@
+# Render Blueprint — one-click deploy for this repo on Render (free tier).
+# Render dashboard me "New +" -> "Blueprint" -> apna repo select karo,
+# baqi (env vars prompts) Render khud pooch lega.
+services:
+  - type: web
+    name: monarch-assistant
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: WHATSAPP_TOKEN
+        sync: false
+      - key: PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_PHONE
+        sync: false
+      - key: WEBHOOK_VERIFY_TOKEN
+        generateValue: true
