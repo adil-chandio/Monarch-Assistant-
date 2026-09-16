@@ -199,6 +199,59 @@ validate karta hai aur batata hai:
 
 ---
 
+## 🫀 Zinda Rakhne Ka System (24/7 liveness — forensic analysis)
+
+Bot ko "marne" se kya cheezein bachati hain — poori failure-mode analysis:
+
+### Bot ko kya kya mar sakta hai (aur kaise bachna hai)
+
+| # | Failure mode | Kisko hit hota hai | Kya hota hai | Protection (is system me) |
+|---|---|---|---|---|
+| 1 | **Host so jata hai** (idle sleep) | Render (15 min), Freebuff (unknown) | Pehla reply 30-60 sec late (Render) — yahi worst case hai, kyunki Meta ka POST khud host jagata hai | **UptimeRobot heartbeat (neeche)** — har 5 min ping → host kabhi nahi soota |
+| 2 | **Host 21+ ghante dead** | Koi bhi | Meta 8 baar retry karta hai (1min → 5min → 15min → 1h → 2h → 6h → 12h), phir **webhook KOI BAND nahi — DISABLE ho jata hai** → messages aane hi band | UptimeRobot **5 min me alert** (email) → fix → Meta dashboard me webhook re-subscribe (2 min ka kaam) |
+| 3 | **Reply processing slow** (Graph API timeout) | Sab (rare) | Meta ka 3-10 sec timeout exceed → retry → double reply risk | **FIXED is code me:** ack-first pattern — Meta ko turant 200, reply background me (Workers: `ctx.waitUntil` max 30 sec). Timeout ab impossible |
+| 4 | **Worker 100k requests/day cross** | Workers | Error 1027 — worker 24h ke liye band | Assistant ~50 req/din use karta hai → **2000x margin**. Dashboard → Analytics se track |
+| 5 | **Token expire/regenerate** | Sab | Har reply fail (code 190/131044), logs me `FAILED to reply` | `npm run check` se pata chalta hai; naya token set karo (Workers: `wrangler secret put`) |
+| 6 | **Number quality drop** | Sab | Meta messaging limit daalta hai | Hum sirf **user-initiated** (contact ne pehle message kiya) replies bhejte hain — yeh Meta ke rules me safe hai. Spam-like bulk bhejna mat |
+
+**Zaroori fact (Meta retry semantics):** Agar host thori der down raha to message **lose nahi hota** —
+Meta upar wale schedule par redelivery karta hai (max 7 din). Risk sirf tab hai jab host 21+ ghante
+lagataar dead rahe (failure #2) — wahi UptimeRobot 5 min me pakad leta hai.
+
+### Layer 1 — Heartbeat: UptimeRobot (free, bina card)
+
+Koi bhi host par (Render/Freebuff/VPS/Workers) lagao:
+
+1. [uptimerobot.com](https://uptimerobot.com) pe free account (50 monitors, 5-min check, email alerts)
+2. **Add Monitor** → Type: **HTTP(s)** → URL: `https://<aapka-host>/` (health endpoint) → Interval: **5 minutes**
+3. Alert contact: aapka email → Save
+
+**Double faida:**
+- 🛡️ **Monitoring** — host girte hi 5 min me email aayega
+- ☕ **Keep-alive** — har 5 min ka ping Render/Freebuff ko jagaye rehta hai (15-min sleep threshold se pehle),
+  to "so jana" wala problem #1 **poora khatam** — reply hamesha 2-5 sec me
+
+Workers par heartbeat optional hai (wo kabhi nahi soota) lekin monitoring ke liye bhi acha hai.
+
+### Layer 2 — 24-hour Soak Test (certification)
+
+Deploy ke baad ye karo — phir aap 100% pakka ho sakte ho:
+
+1. Aaj shaam 1 test message bhejo ✅
+2. Raat 12 baje (ya 2-3 ghante baad) 1 test message bhejo ✅
+3. Subah uthte hi 1 test message bhejo ✅
+4. Har ek **2-5 second** me reply aaye to → **ZINDA CERTIFIED** 🏅
+
+### Layer 3 — Webhook re-subscribe (sirf failure #2 me)
+
+Agar UptimeRobot ne 21+ ghante down ka alert diya ho: Meta dashboard → WhatsApp →
+Webhooks → apna callback select karo → fields (`messages`) dobara select → **Subscribe**.
+Bas — system wapas zinda.
+
+**Poora system ka kharcha: Rs. 0** (Workers free + UptimeRobot free + GitHub free)
+
+---
+
 ## 🔐 Token ki security (zaroori)
 
 - Access token **sirf** host ke environment variables me jaata hai (Freebuff/Render/VPS).

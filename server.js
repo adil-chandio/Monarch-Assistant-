@@ -161,7 +161,10 @@ const server = http.createServer(async (req, res) => {
         for (const change of (entry && entry.changes) || []) {
           const value = change && change.value;
           if (value && value.messaging_product === 'whatsapp' && (value.messages || []).length) {
-            await handleValue(value);
+            // Meta best practice: pehle 200 do, phir kaam karo.
+            // (Reply processing background me hoti hai — Meta ke timeout
+            // window ko kabhi exceed nahi hota, is liye no redelivery/duplicates.)
+            void handleValue(value).catch((e) => console.error('webhook job error:', e.message));
           }
         }
       }

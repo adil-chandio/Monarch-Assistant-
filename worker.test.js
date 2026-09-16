@@ -50,14 +50,19 @@ function incoming(body, { from = '923009998887', id = 'wamid.UNIQUE' } = {}) {
 }
 
 async function post(raw) {
-  return worker.fetch(
+  const waiters = [];
+  const ctx = { waitUntil: (p) => waiters.push(p) };
+  const res = await worker.fetch(
     new Request('https://monarch-assistant.example.workers.dev/webhook', {
       method: 'POST',
       body: raw,
       headers: { 'content-type': 'application/json' },
     }),
-    ENV
+    ENV,
+    ctx
   );
+  await Promise.allSettled(waiters); // reply kaam (background job) mukammal hone tak ruko
+  return res;
 }
 
 test('worker: GET verify returns challenge', async () => {
